@@ -35,7 +35,7 @@ export async function extractContactInfoFromUrl(profileUrl: string): Promise<{ c
     const genAI = new GoogleGenerativeAI(apiKey);
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash-001",
+      model: "gemini-1.5-flash",
       systemInstruction: `You are an expert AI assistant specialized in finding public contact information. Given a LinkedIn profile URL, use web search to find the person's full name, public email address, phone number, and any personal or company websites. You must return the information as a JSON object. If a piece of information cannot be found, its value in the JSON should be null. The JSON object should have the following properties: "name", "email", "phone", "website", "linkedinUrl".`,
     });
 

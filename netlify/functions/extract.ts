@@ -1,5 +1,5 @@
-import {Handler} from '@netlify/functions';
-import {GoogleGenerativeAI} from "@google/generative-ai";
+import { Handler } from '@netlify/functions';
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 interface ContactInfo {
     name: string | null;
@@ -25,25 +25,25 @@ export const handler: Handler = async (event) => {
     };
 
     if (event.httpMethod === 'OPTIONS') {
-        return {statusCode: 200, headers, body: ''};
+        return { statusCode: 200, headers, body: '' };
     }
 
     if (event.httpMethod !== 'POST') {
         return {
             statusCode: 405,
             headers,
-            body: JSON.stringify({message: 'Method Not Allowed'}),
+            body: JSON.stringify({ message: 'Method Not Allowed' }),
         };
     }
 
     try {
-        const {profileUrl} = JSON.parse(event.body || '{}');
+        const { profileUrl } = JSON.parse(event.body || '{}');
 
         if (!profileUrl || typeof profileUrl !== 'string') {
             return {
                 statusCode: 400,
                 headers,
-                body: JSON.stringify({message: 'profileUrl is required in the request body'}),
+                body: JSON.stringify({ message: 'profileUrl is required in the request body' }),
             };
         }
 
@@ -53,25 +53,25 @@ export const handler: Handler = async (event) => {
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({message: "Server configuration error: API_KEY is missing."}),
+                body: JSON.stringify({ message: "Server configuration error: API_KEY is missing." }),
             };
         }
 
         const genAI = new GoogleGenerativeAI(apiKey);
 
         const model = genAI.getGenerativeModel({
-            model: "gemini-2.0-flash-001",
+            model: "gemini-1.5-flash",
             systemInstruction: `You are an expert AI assistant specialized in finding public contact information. Given a LinkedIn profile URL, use web search to find the person's full name, public email address, phone number, and any personal or company websites. You must return the information as a JSON object. If a piece of information cannot be found, its value in the JSON should be null. The JSON object should have the following properties: "name", "email", "phone", "website", "linkedinUrl".`,
         });
 
         const prompt = `Find the public contact information for the person with this LinkedIn profile: ${profileUrl}. The 'linkedinUrl' field in the JSON response must be this exact URL. Respond with only the JSON object.`;
 
         const result = await model.generateContent({
-            contents: [{role: 'user', parts: [{text: prompt}]}],
+            contents: [{ role: 'user', parts: [{ text: prompt }] }],
             generationConfig: {
                 temperature: 0.0,
             },
-            tools: [{googleSearch: {}}],
+            tools: [{ googleSearch: {} }],
         });
 
         const response = result.response;
@@ -93,7 +93,7 @@ export const handler: Handler = async (event) => {
                 return {
                     statusCode: 500,
                     headers,
-                    body: JSON.stringify({message: "The AI response did not contain a valid JSON object."}),
+                    body: JSON.stringify({ message: "The AI response did not contain a valid JSON object." }),
                 };
             }
         }
@@ -106,7 +106,7 @@ export const handler: Handler = async (event) => {
             return {
                 statusCode: 500,
                 headers,
-                body: JSON.stringify({message: "The AI returned a response that was not valid JSON."}),
+                body: JSON.stringify({ message: "The AI returned a response that was not valid JSON." }),
             };
         }
 
@@ -123,12 +123,12 @@ export const handler: Handler = async (event) => {
 
         const sources: GroundingChunk[] = groundingChunks
             .filter((c: any) => c.web?.uri)
-            .map((c: any) => ({web: c.web!}));
+            .map((c: any) => ({ web: c.web! }));
 
         return {
             statusCode: 200,
             headers,
-            body: JSON.stringify({contactInfo: validatedData, sources}),
+            body: JSON.stringify({ contactInfo: validatedData, sources }),
         };
 
     } catch (error) {
@@ -137,7 +137,7 @@ export const handler: Handler = async (event) => {
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({message: `Failed to get contact information from AI. Reason: ${errorMessage}`}),
+            body: JSON.stringify({ message: `Failed to get contact information from AI. Reason: ${errorMessage}` }),
         };
     }
 };
